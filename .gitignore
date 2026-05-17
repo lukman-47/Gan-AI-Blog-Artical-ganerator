@@ -1,0 +1,17 @@
+# API Keys (CRITICAL SECURITY - Do not expose to GitHub)
+secret_api_keys.py
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary media files
+*.wav
+*.mp3
+
+# Virtual environments (if any)
+.venv/
+venv/
+ENV/
+env/
