@@ -211,8 +211,7 @@ with col_mic:
     audio_data = mic_recorder(
         start_prompt="🎤 Speak",
         stop_prompt="🛑 Stop",
-        key="mic_recorder_btn",
-        use_voicerecorder=False
+        key="mic_recorder_btn"
     )
 
 if audio_data:
