@@ -1,30 +1,18 @@
 import streamlit as st
 import os
-import sounddevice as sd
-from scipy.io.wavfile import write
-import numpy as np
 import time
-import torch
-torch._dynamo.disable()
-
-import whisper
 from groq import Groq
 from huggingface_hub import InferenceClient
 from gtts import gTTS
 import base64
+from streamlit_mic_recorder import mic_recorder
 
 from secret_api_keys import huggingface_api_key, groq_api_key
 
 # ======================================================
 # FFmpeg PATH for Whisper (Windows Fix)
 # ======================================================
-FFMPEG_PATH = r"C:\Users\Lukman\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin"
-os.environ["PATH"] += os.pathsep + FFMPEG_PATH
 
-# ======================================================
-# Load Whisper STT model (Multilingual)
-# ======================================================
-stt_model = whisper.load_model("tiny")   # Use "small" for better accuracy
 
 # ======================================================
 # Center Popup Function
@@ -120,32 +108,17 @@ def generate_with(model_name, prompt, lang_name):
 
 
 # ======================================================
-# Record Audio (Mic)
-# ======================================================
-def record_audio(duration=5, filename="input.wav"):
-    sample_rate = 16000
-    st.write("🎙 Recording...")
-
-    audio = sd.rec(
-        int(duration * sample_rate),
-        samplerate=sample_rate,
-        channels=1,
-        dtype="float32"
-    )
-    sd.wait()
-
-    audio_int16 = (audio * 32767).astype(np.int16)
-    write(filename, sample_rate, audio_int16)
-
-    return filename
-
-# ======================================================
-# Speech to Text (Whisper)
+# Speech to Text (Groq Whisper API)
 # ======================================================
 def speech_to_text(audio_path, lang_code):
     try:
-        result = stt_model.transcribe(audio_path, language=lang_code)
-        return result["text"].strip()
+        with open(audio_path, "rb") as file:
+            transcription = groq_client.audio.transcriptions.create(
+                file=(audio_path, file.read()),
+                model="whisper-large-v3",
+                language=lang_code
+            )
+        return transcription.text.strip()
     except Exception as e:
         st.error(f"STT Error: {e}")
         return ""
@@ -177,6 +150,12 @@ def text_to_speech(text, lang_code):
 # ======================================================
 # STREAMLIT UI
 # ======================================================
+
+# Render Logo at the top
+if os.path.exists("logo.png"):
+    col_logo_left, col_logo_center, col_logo_right = st.columns([1.5, 2, 1.5])
+    with col_logo_center:
+        st.image("logo.png", use_container_width=True)
 
 col_title, col_theme = st.columns([8, 2])
 with col_title:
@@ -213,14 +192,26 @@ with col_btn:
     gen_titles_btn = st.button("Generate Titles")
 
 with col_mic:
-    if st.button("🎤", key="mic_btn"):
-        show_center_message("🎙 Speak now...", "rgba(255, 193, 7, 0.4)", 2)
-        audio_file = record_audio(5)
+    audio_data = mic_recorder(
+        start_prompt="🎤 Speak",
+        stop_prompt="🛑 Stop",
+        key="mic_recorder_btn",
+        use_voicerecorder=False
+    )
+
+if audio_data:
+    audio_bytes = audio_data["bytes"]
+    audio_file = "input.wav"
+    with open(audio_file, "wb") as f:
+        f.write(audio_bytes)
+    
+    with st.spinner("Transcribing..."):
         text = speech_to_text(audio_file, lang_code)
-        if text:
-            st.session_state.voice_topic = text
-            show_center_message(f"✔ Recognized: {text}", "rgba(76, 175, 80, 0.4)", 2)
-            st.rerun()
+    
+    if text:
+        st.session_state.voice_topic = text
+        show_center_message(f"✔ Recognized: {text}", "rgba(76, 175, 80, 0.4)", 2)
+        st.rerun()
 
 # Generate Titles
 if gen_titles_btn:
