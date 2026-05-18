@@ -290,17 +290,30 @@ with colA:
 
 with colB:
     if st.button("Generate Full Blog"):
-        with st.spinner("Generating Full Blog..."):
-            outline = st.session_state.get("outline", "")
-            blog_prompt = f"""
-            Write a full 1200-1600 word blog using this outline:
+        if not selected_title.strip():
+            st.error("Please select or enter a title first!")
+        else:
+            with st.spinner("Generating Full Blog..."):
+                outline = st.session_state.get("outline", "")
+                if not outline or not outline.strip():
+                    # Auto-generate the outline first if missing
+                    outline_prompt = (
+                        f"Create a detailed outline for: \"{selected_title}\".\n"
+                        f"- Use numbered sections.\n"
+                        f"- Use bullet points."
+                    )
+                    outline = generate_with(model_choice, outline_prompt, lang_name)
+                    st.session_state["outline"] = outline
 
-            {outline}
+                blog_prompt = f"""
+                Write a full 1200-1600 word blog about the title: "{selected_title}" based on this outline:
 
-            Keep language simple and structured.
-            """
-            st.session_state["full_blog"] = generate_with(model_choice, blog_prompt, lang_name)
-            st.session_state["outline"] = None
+                {outline}
+
+                Keep language simple and structured.
+                """
+                st.session_state["full_blog"] = generate_with(model_choice, blog_prompt, lang_name)
+
 
 # Show Outline + TTS
 if st.session_state.get("outline"):
