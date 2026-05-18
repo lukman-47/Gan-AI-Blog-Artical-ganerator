@@ -79,12 +79,20 @@ LANG_OPTIONS = {
 }
 
 def apply_language_prompt(base_prompt, lang_name):
+    script_instruction = ""
+    if lang_name == "Hindi":
+        script_instruction = "- Use the native script (Devanagari script).\n"
+    elif lang_name == "Gujarati":
+        script_instruction = "- Use the native script (Gujarati script).\n"
+    elif lang_name == "English":
+        script_instruction = "- Use standard Latin/English script.\n"
+
     return (
         base_prompt +
         f"\n\nIMPORTANT:\n"
-        f"- Write the entire output in {lang_name}.\n"
-        f"- Use the native script (Devanagari for Hindi, Gujarati script for Gujarati).\n"
-        f"- Do NOT switch languages."
+        f"- Write the entire output strictly in {lang_name}.\n"
+        f"{script_instruction}"
+        f"- Do NOT use any other language or script."
     )
 
 # ======================================================
