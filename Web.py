@@ -7,7 +7,23 @@ from gtts import gTTS
 import base64
 from streamlit_mic_recorder import mic_recorder
 
-from secret_api_keys import huggingface_api_key, groq_api_key
+# ======================================================
+# Safe API Key Loading (Local vs. Streamlit Cloud)
+# ======================================================
+huggingface_api_key = ""
+groq_api_key = ""
+
+try:
+    from secret_api_keys import huggingface_api_key as hf_key, groq_api_key as groq_key
+    huggingface_api_key = hf_key
+    groq_api_key = groq_key
+except ImportError:
+    try:
+        huggingface_api_key = st.secrets.get("huggingface_api_key", os.environ.get("HUGGINGFACE_API_KEY", ""))
+        groq_api_key = st.secrets.get("groq_api_key", os.environ.get("GROQ_API_KEY", ""))
+    except Exception:
+        huggingface_api_key = os.environ.get("HUGGINGFACE_API_KEY", "")
+        groq_api_key = os.environ.get("GROQ_API_KEY", "")
 
 # ======================================================
 # FFmpeg PATH for Whisper (Windows Fix)
