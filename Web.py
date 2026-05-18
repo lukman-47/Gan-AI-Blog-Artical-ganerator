@@ -65,8 +65,8 @@ load_css(st.session_state.theme)
 # ======================================================
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = huggingface_api_key
 
-deepseek_client = InferenceClient("deepseek-ai/DeepSeek-V3.2-Exp", token=huggingface_api_key)
-hf_llama_client = InferenceClient("meta-llama/Meta-Llama-3.1-8B-Instruct", token=huggingface_api_key)
+deepseek_client = InferenceClient("deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", token=huggingface_api_key)
+hf_llama_client = InferenceClient("Qwen/Qwen2.5-7B-Instruct", token=huggingface_api_key)
 groq_client = Groq(api_key=groq_api_key)
 
 # ======================================================
@@ -202,7 +202,7 @@ if "voice_topic" not in st.session_state:
 
 topic = st.text_input("Enter Topic:", value=st.session_state.voice_topic)
 
-col_btn, col_mic = st.columns([4, 1])
+col_btn, col_mic = st.columns([4, 1], vertical_alignment="center")
 
 with col_btn:
     gen_titles_btn = st.button("Generate Titles")
